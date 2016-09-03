@@ -10,7 +10,7 @@ class parser {
   QString evaluateRPN(QString expression);
 
  private:
-  bool compare(QChar a, QChar b);
-  int evaluate(int left, int right, QChar op);
+  bool comparePrecedence(QChar a, QChar b);
+  double evaluate(double left, double right, QChar op);
 };
 #endif // PARSER_H
