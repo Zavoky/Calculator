@@ -1,6 +1,7 @@
 #include "window.h"
 #include "parser.h"
 
+// creates layout, buttons, and places them
 Window::Window(QWidget *parent) : QWidget(parent) {
   QGridLayout *mainLayout = new QGridLayout;
   mainLayout->setSizeConstraint(QLayout::SetFixedSize);
@@ -37,6 +38,7 @@ Window::Window(QWidget *parent) : QWidget(parent) {
   }
 }
 
+// concatenates button text to the display
 void Window::clickedButton() {
   QPushButton *obj = qobject_cast<QPushButton *> (sender());
   if (obj->text() == QChar(0x00F7)) {
@@ -52,6 +54,7 @@ void Window::clickedButton() {
   }
 }
 
+// calls evaluation functions then displays the result
 void Window::clickedEnter() {
   parser expression;
   QString expressionRPN = expression.convertToRPN(display->text());
@@ -59,10 +62,12 @@ void Window::clickedEnter() {
   display->setText(text);
 }
 
+// clears display
 void Window::clickedClear() {
   display->clear();
 }
 
+// creates and returns button object
 QPushButton *Window::createButton(QString text, QSize size, const char *slot) {
   QPushButton *button = new QPushButton(text);
   button->setFixedSize(size);
