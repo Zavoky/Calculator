@@ -3,57 +3,79 @@
 
 parser::parser() {}
 
+// converts user input to reverse polish notation and returns it
 QString parser::convertToRPN(QString input) {
-  QStack<QChar> operators;
-  QQueue<QChar> digits;
+  QStack<QChar> operatorStack;
+  QQueue<QChar> outputQueue;
   QChar ops[] = {'+', '-', '*', '/'};
   for (QChar &token : input) {
     // digit check
-    if (token > 47 && token < 58) {
-      digits.enqueue(token);
+    if (token > 47 && token < 58 || token == 46) {
+      outputQueue.enqueue(token);
     }
     // operator check
     else for (QChar &op : ops) {
       if (token == op) {
-        while (!operators.isEmpty() && compare(operators.top(), op)) {
-          digits.enqueue(operators.pop());
+        // add a space for easier parsing
+        outputQueue.enqueue(32);
+        while (!operatorStack.isEmpty() &&
+               comparePrecedence(op, operatorStack.top())) {
+          outputQueue.enqueue(operatorStack.pop());
+          outputQueue.enqueue(32);
         }
-        operators.push(token);
+        operatorStack.push(token);
         break;
       }
     }
   }
-  while (!operators.isEmpty()) {
-    digits.enqueue(operators.pop());
+  outputQueue.enqueue(32);
+  while (!operatorStack.isEmpty()) {
+    outputQueue.enqueue(operatorStack.pop());
   }
   QString expressionRPN;
-  while (!digits.isEmpty()) {
-    expressionRPN += digits.dequeue();
+  while (!outputQueue.isEmpty()) {
+    expressionRPN += outputQueue.dequeue();
   }
+
   return expressionRPN;
 }
 
+// evaluates RPN expressions and returns it
 QString parser::evaluateRPN(QString expression) {
-  int left, right, result;
-  QChar op;
-  QStack<int> digits;
-  for (QChar token : expression) {
+  QStringList input = expression.split(' ');
+  QStack<double> values;
+  QChar token;
+  double left;
+  double right;
+  double result;
+  for (int i = 0; i < input.length(); i++) {
+    token = input[i][0];
     if (token > 47 && token < 58) {
-      digits.push(token.digitValue());
+      values.push(input[i].toDouble());
     }
     else {
-      op = token;
-      right = digits.pop();
-      left = digits.pop();
+      // no exceptions for pop() so isEmpty() is used instead
+      if (!values.isEmpty()) {
+        right = values.pop();
+        if (!values.isEmpty()) {
+          left = values.pop();
+        }
+        else {
+          return "Invalid Input";
+        }
+      }
+      else {
+        return "Invalid Input";
+      }
       result = evaluate(left, right, token);
-      digits.push(result);
+      values.push(result);
     }
   }
-  return QString::number(digits.pop());
+  return QString::number(values.pop());
 }
 
-// Returns result
-int parser::evaluate(int left, int right, QChar op) {
+// helper function for evaluateRPN
+double parser::evaluate(double left, double right, QChar op) {
   switch (op.toLatin1()) {
     case '+': {
       return left+right;
@@ -73,8 +95,8 @@ int parser::evaluate(int left, int right, QChar op) {
   }
 }
 
-// Returns true if a is greater than b
-bool parser::compare(QChar a, QChar b) {
+// Returns true if a is less than or equal to b
+bool parser::comparePrecedence(QChar a, QChar b) {
   enum class ops {
     opPlus,
     opSub,
@@ -126,5 +148,5 @@ bool parser::compare(QChar a, QChar b) {
       break;
     }
   }
-  return opA > opB;
+  return opA <= opB;
 }
